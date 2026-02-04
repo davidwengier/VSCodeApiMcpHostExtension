@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { IPCServer, getDefaultSocketPath } from './bridge/ipc';
+import { HttpMcpServer } from './server/http';
 
 let ipcServer: IPCServer | null = null;
+let httpMcpServer: HttpMcpServer | null = null;
 let outputChannel: vscode.OutputChannel;
 
 function log(message: string, level: 'debug' | 'info' | 'warn' | 'error' = 'info'): void {
@@ -144,6 +146,31 @@ async function handleVSCodeRequest(method: string, params: unknown): Promise<unk
             }));
         }
 
+        case 'setSelection': {
+            const { startLine, startCharacter, endLine, endCharacter } = params as {
+                startLine: number;
+                startCharacter?: number;
+                endLine?: number;
+                endCharacter?: number;
+            };
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                throw new Error('No active editor');
+            }
+            const start = new vscode.Position(startLine, startCharacter ?? 0);
+            const end = new vscode.Position(endLine ?? startLine, endCharacter ?? (endLine === undefined ? editor.document.lineAt(startLine).text.length : 0));
+            editor.selection = new vscode.Selection(start, end);
+            editor.revealRange(new vscode.Range(start, end), vscode.TextEditorRevealType.InCenter);
+            return {
+                success: true,
+                selection: {
+                    start: { line: start.line, character: start.character },
+                    end: { line: end.line, character: end.character },
+                },
+                selectedText: editor.document.getText(editor.selection),
+            };
+        }
+
         default:
             throw new Error(`Unknown method: ${method}`);
     }
@@ -196,6 +223,28 @@ function stopIPCServer(): void {
     }
 }
 
+async function startHttpServer(): Promise<void> {
+    if (httpMcpServer) {
+        log('HTTP MCP server already running');
+        return;
+    }
+
+    const config = vscode.workspace.getConfiguration('vscode-api-mcp');
+    const port = config.get<number>('httpPort', 6010);
+
+    httpMcpServer = new HttpMcpServer(handleVSCodeRequest, port);
+    await httpMcpServer.start();
+    log(`HTTP MCP server started at ${httpMcpServer.getUrl()}`);
+}
+
+function stopHttpServer(): void {
+    if (httpMcpServer) {
+        httpMcpServer.stop();
+        httpMcpServer = null;
+        log('HTTP MCP server stopped');
+    }
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     outputChannel = vscode.window.createOutputChannel('VS Code API MCP');
     context.subscriptions.push(outputChannel);
@@ -207,7 +256,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.commands.registerCommand('vscode-api-mcp.startServer', async () => {
             try {
                 await startIPCServer();
-                vscode.window.showInformationMessage('MCP IPC Server started');
+                await startHttpServer();
+                vscode.window.showInformationMessage(`MCP servers started. HTTP: http://127.0.0.1:${httpMcpServer?.getPort() || 6010}/mcp`);
             } catch (error) {
                 vscode.window.showErrorMessage(`Failed to start server: ${error}`);
             }
@@ -215,14 +265,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         vscode.commands.registerCommand('vscode-api-mcp.stopServer', () => {
             stopIPCServer();
-            vscode.window.showInformationMessage('MCP IPC Server stopped');
+            stopHttpServer();
+            vscode.window.showInformationMessage('MCP servers stopped');
         }),
 
         vscode.commands.registerCommand('vscode-api-mcp.showStatus', () => {
+            const messages: string[] = [];
             if (ipcServer) {
-                vscode.window.showInformationMessage(`MCP IPC Server running at ${ipcServer.getSocketPath()}`);
+                messages.push(`IPC: ${ipcServer.getSocketPath()}`);
+            }
+            if (httpMcpServer) {
+                messages.push(`HTTP: ${httpMcpServer.getUrl()}`);
+            }
+            if (messages.length === 0) {
+                vscode.window.showInformationMessage('MCP servers are not running');
             } else {
-                vscode.window.showInformationMessage('MCP IPC Server is not running');
+                vscode.window.showInformationMessage(`MCP servers running - ${messages.join(', ')}`);
             }
         })
     );
@@ -257,6 +315,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         } catch (error) {
             log(`Failed to auto-start IPC server: ${error}`, 'error');
         }
+        try {
+            await startHttpServer();
+        } catch (error) {
+            log(`Failed to auto-start HTTP server: ${error}`, 'error');
+        }
     }
 
     log('Extension activated');
@@ -264,4 +327,5 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
 export function deactivate(): void {
     stopIPCServer();
+    stopHttpServer();
 }

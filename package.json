@@ -77,6 +77,11 @@
           "type": "string",
           "default": "",
           "description": "Custom socket path for the IPC server. Leave empty to use default (temp directory). On Windows, this is a named pipe path."
+        },
+        "vscode-api-mcp.httpPort": {
+          "type": "number",
+          "default": 6010,
+          "description": "Port for the HTTP MCP server. Users can connect Copilot CLI to http://127.0.0.1:<port>/mcp"
         }
       }
     }

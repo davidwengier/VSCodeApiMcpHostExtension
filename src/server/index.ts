@@ -304,6 +304,31 @@ server.tool(
     }
 );
 
+// Tool: Set selection in active editor
+server.tool(
+    'vscode_setSelection',
+    'Set the selection in the active editor. Can select a range of text or position the cursor.',
+    {
+        startLine: z.number().describe('Start line number (0-based)'),
+        startCharacter: z.number().optional().describe('Start character position (0-based, default: 0)'),
+        endLine: z.number().optional().describe('End line number (0-based, default: same as startLine)'),
+        endCharacter: z.number().optional().describe('End character position (0-based, default: end of line)'),
+    },
+    async ({ startLine, startCharacter, endLine, endCharacter }) => {
+        try {
+            const result = await callVSCode('setSelection', { startLine, startCharacter, endLine, endCharacter });
+            return {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            };
+        } catch (error) {
+            return {
+                content: [{ type: 'text', text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+                isError: true,
+            };
+        }
+    }
+);
+
 // Start the server
 async function main(): Promise<void> {
     const transport = new StdioServerTransport();

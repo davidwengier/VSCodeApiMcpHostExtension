@@ -42,9 +42,26 @@ code --install-extension vscode-api-mcp-0.1.0.vsix
 
 ## Usage
 
-### With GitHub Copilot CLI
+### With GitHub Copilot CLI (Recommended: HTTP)
 
-Add the server to your MCP configuration:
+The simplest configuration - just add the HTTP URL to your MCP settings:
+
+```json
+{
+  "servers": {
+    "vscode-api": {
+      "type": "http",
+      "url": "http://127.0.0.1:6010/mcp"
+    }
+  }
+}
+```
+
+That's it! No command to run, no environment variables. The extension runs the MCP server directly.
+
+### With GitHub Copilot CLI (Alternative: stdio)
+
+If you prefer the stdio transport:
 
 ```json
 {
@@ -54,12 +71,14 @@ Add the server to your MCP configuration:
       "command": "node",
       "args": ["/path/to/extension/dist/server.js"],
       "env": {
-        "VSCODE_IPC_HOOK": "<socket-path>"
+        "VSCODE_IPC_HOOK": "\\\\.\\pipe\\vscode-api-mcp.sock"
       }
     }
   }
 }
 ```
+
+> **Note:** The default socket path is `\\.\pipe\vscode-api-mcp.sock` on Windows or `/tmp/vscode-api-mcp.sock` on macOS/Linux.
 
 The extension automatically starts an IPC server when VS Code launches. You can check the socket path by running the command **VS Code API MCP: Show Server Status**.
 
@@ -117,9 +136,10 @@ The extension consists of two parts:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `vscode-api-mcp.autoStart` | `true` | Automatically start the IPC server when VS Code starts |
+| `vscode-api-mcp.autoStart` | `true` | Automatically start the MCP servers when VS Code starts |
 | `vscode-api-mcp.logLevel` | `info` | Log level: debug, info, warn, error |
-| `vscode-api-mcp.socketPath` | `""` | Custom socket path for IPC. Leave empty for default (temp directory) |
+| `vscode-api-mcp.httpPort` | `6010` | Port for the HTTP MCP server |
+| `vscode-api-mcp.socketPath` | `""` | Custom socket path for IPC (stdio transport). Leave empty for default |
 
 ## Commands
 
