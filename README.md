@@ -1,6 +1,10 @@
+<p align="center">
+  <img src="icon.png" alt="VS Code API MCP Server" width="128" height="128">
+</p>
+
 # VS Code API MCP Server
 
-A VS Code extension that exposes VS Code APIs as an MCP (Model Context Protocol) server, allowing AI agents like GitHub Copilot CLI, Claude, or other MCP clients to interact with VS Code.
+A VS Code extensionthat exposes VS Code APIs as an MCP (Model Context Protocol) server, allowing AI agents like GitHub Copilot CLI, Claude, or other MCP clients to interact with VS Code.
 
 ## Features
 

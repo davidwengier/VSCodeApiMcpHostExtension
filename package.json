@@ -3,6 +3,7 @@
   "displayName": "VS Code API MCP Server",
   "description": "MCP server that exposes VS Code APIs as tools for AI agents",
   "version": "0.1.0",
+  "icon": "icon.png",
   "publisher": "vscode-api-mcp",
   "license": "MIT",
   "engines": {
