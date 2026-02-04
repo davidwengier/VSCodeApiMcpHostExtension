@@ -1,0 +1,95 @@
+{
+  "name": "vscode-api-mcp",
+  "displayName": "VS Code API MCP Server",
+  "description": "MCP server that exposes VS Code APIs as tools for AI agents",
+  "version": "0.1.0",
+  "publisher": "vscode-api-mcp",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.102.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "mcp",
+    "model context protocol",
+    "ai",
+    "copilot",
+    "vscode api"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-api-mcp.startServer",
+        "title": "Start MCP Server",
+        "category": "VS Code API MCP"
+      },
+      {
+        "command": "vscode-api-mcp.stopServer",
+        "title": "Stop MCP Server",
+        "category": "VS Code API MCP"
+      },
+      {
+        "command": "vscode-api-mcp.showStatus",
+        "title": "Show Server Status",
+        "category": "VS Code API MCP"
+      }
+    ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "vscode-api-mcp"
+      }
+    ],
+    "configuration": {
+      "title": "VS Code API MCP Server",
+      "properties": {
+        "vscode-api-mcp.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start the MCP server when VS Code starts"
+        },
+        "vscode-api-mcp.logLevel": {
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "default": "info",
+          "description": "Log level for the MCP server"
+        },
+        "vscode-api-mcp.socketPath": {
+          "type": "string",
+          "default": "",
+          "description": "Custom socket path for the IPC server. Leave empty to use default (temp directory). On Windows, this is a named pipe path."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.102.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "esbuild": "^0.20.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.22.0"
+  }
+}

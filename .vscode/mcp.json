@@ -1,0 +1,12 @@
+{
+    "servers": {
+        "vscode-api": {
+            "type": "stdio",
+            "command": "node",
+            "args": ["${workspaceFolder}/dist/server.js"],
+            "env": {
+                "VSCODE_IPC_HOOK": "${env:VSCODE_IPC_HOOK}"
+            }
+        }
+    }
+}
